@@ -5,8 +5,8 @@ import pandas as pd
 app = Flask(__name__, template_folder='../templates')
 
 # Load model and feature columns
-model = joblib.load('../front/score_predictor.pkl')
-model_columns = joblib.load('../front/model_columns.pkl')
+model = joblib.load('score_predictor.pkl')
+model_columns = joblib.load('model_columns.pkl')
 
 # Route: Home
 @app.route("/")
