@@ -1,9 +1,0 @@
-- name: Deploy Flask App
-  hosts: localhost
-  connection: local
-  tasks:
-    - name: Stop & remove existing container
-      shell: docker rm -f flask-app || true
-
-    - name: Run Docker container
-      shell: docker run -d -p 5000:5000 --name flask-app ajproduct/flask-cricket:latest
