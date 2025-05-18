@@ -1,19 +1,30 @@
 from flask import Flask, request, render_template
 import joblib
 import pandas as pd
+import logging
+import socket
+import json
+from logging.handlers import SocketHandler
 
 app = Flask(__name__, template_folder='../templates')
 
-# Load model and feature columns
-model = joblib.load('../front/score_predictor.pkl')
-model_columns = joblib.load('../front/model_columns.pkl')
+# Load model and columns
+model = joblib.load('score_predictor.pkl')
+model_columns = joblib.load('model_columns.pkl')
 
-# Route: Home
+# ✅ Logstash logger config (host must be 'localhost' unless you're in Docker)
+tcp_handler = SocketHandler('localhost', 5000)
+tcp_handler.setLevel(logging.INFO)
+tcp_handler.setFormatter(logging.Formatter('%(message)s'))
+
+logger = logging.getLogger('logstash')
+logger.setLevel(logging.INFO)
+logger.addHandler(tcp_handler)
+
 @app.route("/")
 def home():
-    return render_template("../templates/index.html")
+    return render_template("index.html")
 
-# Route: Predict
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
@@ -25,7 +36,6 @@ def predict():
         runs_last_5 = int(request.form['runs_last_5'])
         wickets_last_5 = int(request.form['wickets_last_5'])
 
-        # Create input dict
         input_dict = {
             'overs': overs,
             'runs': runs,
@@ -38,17 +48,24 @@ def predict():
         input_dict[f'bat_team_{bat_team}'] = 1
         input_dict[f'bowl_team_{bowl_team}'] = 1
 
-        # Format input as DataFrame
         input_df = pd.DataFrame([input_dict])
         input_df = input_df.reindex(columns=model_columns, fill_value=0)
 
         prediction = model.predict(input_df)[0]
+
+        # ✅ Send data to Logstash
+        logger.info(json.dumps({
+            'event': 'prediction',
+            'input': input_dict,
+            'prediction': round(prediction),
+            'host': socket.gethostname()
+        }))
+
         return render_template("index.html", prediction_text=f"Predicted Score: {round(prediction)}")
 
     except Exception as e:
         return f"Error occurred: {e}"
 
-# ✅ Correctly indented final line:
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
 
