@@ -5,13 +5,13 @@ import pandas as pd
 app = Flask(__name__, template_folder='../templates')
 
 # Load model and feature columns
-model = joblib.load('score_predictor.pkl')
-model_columns = joblib.load('model_columns.pkl')
+model = joblib.load('../front/score_predictor.pkl')
+model_columns = joblib.load('../front/model_columns.pkl')
 
 # Route: Home
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("../templates/index.html")
 
 # Route: Predict
 @app.route("/predict", methods=["POST"])
@@ -48,6 +48,7 @@ def predict():
     except Exception as e:
         return f"Error occurred: {e}"
 
-# ✅ Updated for Docker container access
+# ✅ Correctly indented final line:
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
+
