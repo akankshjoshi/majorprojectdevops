@@ -1,4 +1,5 @@
 version: '3.7'
+
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
@@ -17,12 +18,12 @@ services:
       - "9200:9200"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:7.17.10
+    image: custom-logstash   # ✅ Use your own image
     container_name: logstash
-    volumes:
-      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     ports:
-      - "5044:5000"   # Changed from 5000:5000 to 5044:5000
+      - "5044:5000"           # ✅ External port changed to 5044
+    depends_on:
+      - elasticsearch
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.10
